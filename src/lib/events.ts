@@ -18,6 +18,6 @@ export function trackRepoShared() {
   track("repo_shared");
 }
 
-export function trackFileCopied(filename: string) {
-  track("file_copied", { filename });
+export function trackFileCopied() {
+  track("file_copied");
 }

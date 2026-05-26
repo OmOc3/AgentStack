@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getStoredFiles } from "@/lib/file-store";
+import {
+  getSession,
+  PreviewSessionExpiredError,
+  PreviewSessionNotFoundError,
+} from "@/lib/preview-session";
 
 export const runtime = "nodejs";
 
@@ -15,14 +19,26 @@ export async function GET(request: Request) {
     );
   }
 
-  const files = getStoredFiles(previewId);
+  try {
+    const previewSession = getSession(previewId);
 
-  if (!files) {
+    return NextResponse.json({ files: previewSession.files });
+  } catch (error) {
+    if (
+      error instanceof PreviewSessionNotFoundError ||
+      error instanceof PreviewSessionExpiredError
+    ) {
+      return NextResponse.json(
+        { error: "Generated files are no longer available." },
+        { status: 404 },
+      );
+    }
+
+    console.error("Generated files lookup failed", error);
+
     return NextResponse.json(
-      { error: "Generated files are no longer available." },
-      { status: 404 },
+      { error: "Generated files are not available right now." },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json({ files });
 }

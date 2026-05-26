@@ -1,3 +1,8 @@
+import {
+  stackProposalDefinitions,
+  stackProposalFileBuilders,
+} from "./stack-proposals";
+
 export const stackIds = [
   "next-tailwind",
   "next-supabase",
@@ -9,6 +14,9 @@ export const stackIds = [
   "sveltekit-tailwind",
   "remix-tailwind",
   "astro-tailwind",
+  "next-saas-starter",
+  "ai-chatbot-starter",
+  "marketing-content-starter",
 ] as const;
 
 export type StackId = (typeof stackIds)[number];
@@ -92,6 +100,7 @@ export const stackDefinitions: StackDefinition[] = [
     description: "Astro with Tailwind CSS integration",
     icon: "next",
   },
+  ...stackProposalDefinitions,
 ];
 
 export function isStackId(value: unknown): value is StackId {
@@ -122,10 +131,7 @@ export function getStaticFiles(projectName: string, stack: StackDefinition) {
     ...stackFileBuilders[stack.id](projectName),
   ];
 
-  return files.map((file) => ({
-    ...file,
-    content: withTrailingNewline(file.content),
-  }));
+  return mergeGeneratedFiles(files);
 }
 
 export function mergeGeneratedFiles(files: GeneratedFile[]) {
@@ -161,7 +167,7 @@ const stackFileBuilders: Record<StackId, (projectName: string) => GeneratedFile[
       },
       {
         path: "supabase/migrations/.gitkeep",
-        content: "",
+        content: "# Keep this directory for Supabase migrations.",
       },
     ],
     "next-firebase": (projectName) => [
@@ -218,6 +224,10 @@ const stackFileBuilders: Record<StackId, (projectName: string) => GeneratedFile[
     "sveltekit-tailwind": (projectName) => svelteKitTailwindFiles(projectName),
     "remix-tailwind": (projectName) => remixTailwindFiles(projectName),
     "astro-tailwind": (projectName) => astroTailwindFiles(projectName),
+    "next-saas-starter": stackProposalFileBuilders["next-saas-starter"],
+    "ai-chatbot-starter": stackProposalFileBuilders["ai-chatbot-starter"],
+    "marketing-content-starter":
+      stackProposalFileBuilders["marketing-content-starter"],
   };
 
 function readmeTemplate(projectName: string, stackName: string) {

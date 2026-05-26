@@ -2,6 +2,14 @@
 
 AgentStack creates AI-agent-ready GitHub repositories from a small set of curated starter stacks.
 
+## Documentation
+
+- [Local development](docs/LOCAL_DEVELOPMENT.md)
+- [Deployment](docs/DEPLOYMENT.md)
+- [Environment variables](docs/ENVIRONMENT.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Contributing](docs/CONTRIBUTING.md)
+
 ## Local Setup
 
 ```bash

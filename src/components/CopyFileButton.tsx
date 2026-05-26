@@ -7,16 +7,15 @@ import { trackFileCopied } from "@/lib/events";
 
 type CopyFileButtonProps = {
   content: string;
-  filename: string;
 };
 
-export function CopyFileButton({ content, filename }: CopyFileButtonProps) {
+export function CopyFileButton({ content }: CopyFileButtonProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<number | null>(null);
 
   async function handleCopy() {
     await navigator.clipboard.writeText(content);
-    trackFileCopied(filename);
+    trackFileCopied();
     setCopied(true);
 
     if (timeoutRef.current) {

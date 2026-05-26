@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = process.env.PLAYWRIGHT_PORT ?? "3000";
+const baseURL = `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -7,16 +10,19 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL,
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --hostname 127.0.0.1 --port 3000",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
+    command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+    url: baseURL,
+    reuseExistingServer: false,
     timeout: 120_000,
     env: {
+      GEMINI_API_KEY: "",
+      NEXTAUTH_SECRET: "agentstack-playwright-secret",
       PLAYWRIGHT_TEST: "1",
+      REPO_COUNT_OFFSET: "0",
     },
   },
   projects: [

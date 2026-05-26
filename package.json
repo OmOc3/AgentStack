@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test:unit": "node --test tests/unit/*.test.ts",
+    "validate:stacks": "node scripts/validate-stack-templates.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

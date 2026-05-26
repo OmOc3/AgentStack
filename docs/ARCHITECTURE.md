@@ -1,0 +1,108 @@
+# Architecture
+
+AgentStack is a Next.js App Router app that creates AI-agent-ready GitHub repositories from curated starter stacks. It combines static stack templates with AI-generated agent files, stores the reviewed preview for a short time, then writes that exact file set to GitHub through the signed-in user's OAuth token.
+
+## Stack
+
+- Next.js 15 App Router
+- React 19
+- TypeScript with strict compiler settings
+- Tailwind CSS
+- NextAuth v5 beta with GitHub OAuth
+- Octokit for GitHub repo creation
+- AI provider abstraction with Gemini `gemini-2.0-flash` as the active adapter
+- Vercel Analytics
+
+The repo also contains Supabase helper modules under `src/utils/supabase`, but no current route imports them.
+
+## App Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Homepage with supported stacks, generated-file summary, and repo count from `/api/stats`. |
+| `/generate` | Generator form. Users enter a project name, pick a stack, preview files, sign in, and generate the repo. |
+| `/success` | Success page. Reads `repo` and optional `pid` query params, then shows the repo URL and recent generated files when available. |
+| `/api/auth/[...nextauth]` | NextAuth route handlers. |
+| `/api/preview` | Validates input, calls the active AI provider, merges static stack files, stores a preview session, and returns generated files. |
+| `/api/generate` | Requires GitHub auth, enforces lightweight limits, loads the matching preview session, creates the GitHub repo, and returns the repo URL. |
+| `/api/files` | Returns generated files from the short-lived in-memory preview session store. |
+| `/api/download` | Exports preview-session files as a short-lived ZIP download. |
+| `/api/health` | Returns environment setup booleans without exposing secret values. |
+| `/api/stats` | Returns `REPO_COUNT_OFFSET` as the displayed repo count. |
+| `/api/og` | Generates the Open Graph image on the Edge runtime. |
+| `/robots.txt` and `/sitemap.xml` | Generated from `src/app/robots.ts` and `src/app/sitemap.ts`. |
+
+## Generation Flow
+
+1. `GenerateForm` validates the project name with `validateProjectName`.
+2. The selected stack is checked against `stackIds` and `isStackId`.
+3. Preview calls `/api/preview`.
+4. `/api/preview` calls `generateAgentFiles`, which asks the active AI provider for `CLAUDE.md`, `AGENT.md`, `.cursorrules`, and `.windsurfrules`.
+5. `getStaticFiles` builds the static starter files: `README.md`, `.gitignore`, `.env.example`, and stack-specific app files.
+6. `mergeGeneratedFiles` de-duplicates by path and normalizes trailing newlines.
+7. `validateGeneratedFiles` rejects unsafe paths, duplicate paths, oversized files, and binary-looking content.
+8. `/api/preview` stores the safe files in a preview session and returns the session ID with the file list.
+9. The UI shows the generated file list, file categories, key files, and a ZIP download link.
+10. Repo creation calls `/api/generate` with the preview session ID and the same generation options.
+11. `/api/generate` repeats validation, checks auth, applies the IP and browser-session limits, and verifies the preview session still matches the request. It does not call the AI provider again.
+12. `createRepositoryWithFiles` creates the GitHub repo and writes one initial commit containing every generated file.
+13. The client navigates to `/success?repo=...&pid=...&stack=...`.
+
+Preview files are the source of truth for generation. The preview session is process-local and short-lived, so production deployments with multiple instances still need shared storage if ZIP downloads and success-page file lists must be durable.
+
+## Stack Templates
+
+Stack definitions live in `src/lib/stacks.ts`.
+
+The key pieces are:
+
+- `stackIds`: allowed stack IDs used for runtime validation.
+- `stackDefinitions`: display names, descriptions, and icons shown in the UI.
+- `stackFileBuilders`: maps each stack ID to generated static files.
+- `envExampleTemplate`: controls the `.env.example` generated inside new repos.
+- `nextTailwindFiles`: shared base builder for several Next.js stacks.
+
+Supported stack IDs:
+
+- `next-tailwind`
+- `next-supabase`
+- `next-firebase`
+- `next-drizzle`
+- `expo-firebase`
+- `t3-stack`
+- `next-prisma`
+- `sveltekit-tailwind`
+- `remix-tailwind`
+- `astro-tailwind`
+- `next-saas-starter`
+- `ai-chatbot-starter`
+- `marketing-content-starter`
+
+Generated repos always include the static starter files plus the four AI-generated agent files.
+
+## GitHub Repo Creation
+
+Authentication is handled by NextAuth in `src/lib/auth.ts`. When GitHub returns an OAuth access token, the JWT callback stores it on the token and the session callback exposes it as `session.accessToken`.
+
+`/api/generate` passes that access token to Octokit. The generated repo is created with:
+
+- `private` based on the selected repository visibility
+- `auto_init: false`
+- description from the generation options, defaulting to `Generated by AgentStack.`
+
+Files are written through the Git data API as one initial commit on `main`.
+
+## State and Limits
+
+AgentStack does not currently use a database for app state.
+
+- Preview sessions are stored in a process-local `Map` for 10 minutes, capped at 30 minutes if callers pass a custom TTL.
+- A browser session cookie named `agentstack_generated` blocks repeated repo creation from the same browser session.
+- An in-memory IP limiter allows 3 repo generation requests per hour.
+- Repo count is an env-configured offset, not a database-backed count.
+
+These limits are practical guards, but they are not durable across server restarts or serverless instances.
+
+## Validation
+
+Project names are limited to letters, numbers, and hyphens, with a maximum length of 100 characters. GitHub repo creation can still fail if the signed-in account already has a repo with the chosen name.
