@@ -2,15 +2,27 @@ const GITHUB_AUTH_ENV_NAMES = [
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
 ] as const;
+const GOOGLE_AUTH_ENV_NAMES = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+] as const;
 const PRODUCTION_GITHUB_AUTH_ENV_NAMES = [
   ...GITHUB_AUTH_ENV_NAMES,
   "NEXTAUTH_SECRET",
 ] as const;
+const EMAIL_LOGIN_ENV_NAMES = ["EMAIL_LOGIN_CODE"] as const;
 const AI_ENV_NAMES = ["GEMINI_API_KEY"] as const;
 const APP_URL_ENV_NAME = "NEXTAUTH_URL";
 
+export type AuthProviderStatus = {
+  email: boolean;
+  github: boolean;
+  google: boolean;
+};
+
 export type ServerEnvStatus = {
   authConfigured: boolean;
+  authProviders: AuthProviderStatus;
   aiConfigured: boolean;
   appUrlConfigured: boolean;
 };
@@ -36,10 +48,21 @@ export function getOptionalEnv(name: string): string | undefined {
 }
 
 export function getServerEnvStatus(): ServerEnvStatus {
+  const authProviders = getAuthProviderStatus();
+
   return {
-    authConfigured: hasAllEnv(getGitHubAuthEnvNames()),
+    authConfigured: authProviders.github,
+    authProviders,
     aiConfigured: hasAllEnv(AI_ENV_NAMES),
     appUrlConfigured: hasValidAppUrlEnv(),
+  };
+}
+
+export function getAuthProviderStatus(): AuthProviderStatus {
+  return {
+    email: hasAllEnv(EMAIL_LOGIN_ENV_NAMES),
+    github: hasAllEnv(getGitHubAuthEnvNames()),
+    google: hasAllEnv(GOOGLE_AUTH_ENV_NAMES),
   };
 }
 

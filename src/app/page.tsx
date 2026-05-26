@@ -85,13 +85,21 @@ export default async function Page() {
           >
             AgentStack
           </Link>
-          <Link
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-600 hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-zinc-950"
-            href="/generate"
-          >
-            Generate repo
-            <ArrowRight aria-hidden="true" className="h-4 w-4" />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              className="rounded px-3 py-2 text-sm font-medium text-zinc-300 transition hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-zinc-950"
+              href="/login"
+            >
+              Sign in
+            </Link>
+            <Link
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-sm font-medium text-zinc-100 transition hover:border-zinc-600 hover:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-zinc-950"
+              href="/generate"
+            >
+              Generate repo
+              <ArrowRight aria-hidden="true" className="h-4 w-4" />
+            </Link>
+          </div>
         </header>
 
         <section className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[1fr_26rem] lg:py-20">

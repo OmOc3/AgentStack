@@ -18,6 +18,7 @@ import { StackCard } from "@/components/StackCard";
 import { StepIndicator } from "@/components/StepIndicator";
 import {
   StackCategoryFilter,
+  StackRecommendationPanel,
   StackSearchInput,
 } from "@/components/stack-discovery";
 import {
@@ -37,6 +38,7 @@ import {
 } from "@/lib/generation-options";
 import {
   filterStacksByCategory,
+  getRecommendedStacks,
   searchStacks,
   stackCategories,
   type StackCategory,
@@ -114,6 +116,25 @@ export function GenerateForm({
     () => stackCategories.filter((category) => categoryCounts[category]),
     [categoryCounts],
   );
+  const recommendationIntent = useMemo(
+    () =>
+      [
+        projectName,
+        repositoryDescription === DEFAULT_REPOSITORY_DESCRIPTION
+          ? ""
+          : repositoryDescription,
+        projectBrief,
+      ]
+        .map((value) => value.trim())
+        .filter(Boolean)
+        .join(" "),
+    [projectName, projectBrief, repositoryDescription],
+  );
+  const recommendedStacks = useMemo(
+    () => getRecommendedStacks(discoveryStacks, recommendationIntent),
+    [discoveryStacks, recommendationIntent],
+  );
+  const hasRecommendationIntent = recommendationIntent.length > 0;
   const visibleStacks = useMemo(() => {
     const stacksByCategory = filterStacksByCategory(
       discoveryStacks,
@@ -198,6 +219,12 @@ export function GenerateForm({
     if (selectedStack !== stackId) {
       clearPreview();
     }
+  }
+
+  function handleRecommendationSelect(stackId: StackId) {
+    setStackQuery("");
+    setStackCategory("all");
+    handleStackSelect(stackId);
   }
 
   async function signInWithGithub() {
@@ -530,6 +557,13 @@ export function GenerateForm({
             />
           </div>
         </section>
+
+        <StackRecommendationPanel
+          hasIntent={hasRecommendationIntent}
+          onSelect={handleRecommendationSelect}
+          recommendations={recommendedStacks}
+          selectedStack={selectedStack}
+        />
 
         <section className="space-y-4">
           <div>

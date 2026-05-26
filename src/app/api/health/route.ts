@@ -12,6 +12,7 @@ export async function GET() {
     {
       app: "ok",
       authConfigured: envStatus.authConfigured,
+      authProviders: envStatus.authProviders,
       aiConfigured: envStatus.aiConfigured,
       appUrlConfigured: envStatus.appUrlConfigured,
       storage: "memory",

@@ -1,11 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: Inter, var(--font-geist-sans), -apple-system, system-ui, sans-serif;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #fafafa;
+  --color-ink: #171717;
+  --color-body: #60646c;
+  --color-primary: #000000;
+  --color-primary-active: #1a1a1a;
+  --color-hairline: #f0f0f3;
+  --color-hairline-strong: #dcdee0;
 }
 
 * {
@@ -18,10 +26,8 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(168, 85, 247, 0.15), transparent 30rem),
-    #09090b;
-  color: #f4f4f5;
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 button,
@@ -30,6 +36,6 @@ input {
 }
 
 ::selection {
-  background: #a855f7;
-  color: #fafafa;
+  background: var(--color-primary);
+  color: #ffffff;
 }

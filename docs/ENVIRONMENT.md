@@ -15,6 +15,9 @@ Fill in real values:
 ```bash
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+EMAIL_LOGIN_CODE=
 GEMINI_API_KEY=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
@@ -32,6 +35,9 @@ openssl rand -base64 32
 | --- | --- | --- | --- |
 | `GITHUB_CLIENT_ID` | Yes | `src/lib/auth.ts` | GitHub OAuth client ID. Required for sign-in. |
 | `GITHUB_CLIENT_SECRET` | Yes | `src/lib/auth.ts` | GitHub OAuth client secret. Keep server-only. |
+| `GOOGLE_CLIENT_ID` | No | `src/lib/auth.ts` | Google OAuth client ID. Enables the Google button on `/login`. |
+| `GOOGLE_CLIENT_SECRET` | No | `src/lib/auth.ts` | Google OAuth client secret. Keep server-only. |
+| `EMAIL_LOGIN_CODE` | No | `src/lib/auth.ts` | Shared access code for email sign-in. Leave blank to disable the email option. |
 | `GEMINI_API_KEY` | Yes | `src/lib/ai/gemini.ts` | Required for AI preview generation. Repo creation uses the saved preview session. Keep server-only. |
 | `NEXTAUTH_SECRET` | Production yes, local recommended | `src/lib/auth.ts` | Signs auth state. Development has a fallback, but local parity is better with a real value. |
 | `NEXTAUTH_URL` | Production yes, local recommended | NextAuth runtime | Use the canonical origin, such as `http://localhost:3000` or the production domain. |
@@ -54,6 +60,22 @@ https://your-production-domain/api/auth/callback/github
 ```
 
 Set `NEXTAUTH_URL` to the same origin as the callback URL. If you run the dev server on a different port, update both `NEXTAUTH_URL` and the GitHub OAuth callback.
+
+## Google OAuth URLs
+
+Local development:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```
+
+Production:
+
+```text
+https://your-production-domain/api/auth/callback/google
+```
+
+Google and email sign-in create an AgentStack session, but repo creation still requires a GitHub session because `/api/generate` needs a GitHub access token.
 
 ## Generated Repo Environment Files
 
