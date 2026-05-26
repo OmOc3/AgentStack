@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(168, 85, 247, 0.15), transparent 30rem),
+    #09090b;
+  color: #f4f4f5;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: #a855f7;
+  color: #fafafa;
+}
