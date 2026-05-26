@@ -8,14 +8,12 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:unit": "node --test tests/unit/*.test.ts",
-    "validate:stacks": "node scripts/validate-stack-templates.ts",
+    "test:unit": "tsx --test tests/unit/*.test.ts",
+    "validate:stacks": "tsx scripts/validate-stack-templates.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {
     "@octokit/rest": "^22.0.0",
-    "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.106.2",
     "@vercel/analytics": "^2.0.1",
     "geist": "^1.7.1",
     "lucide-react": "^0.555.0",
@@ -34,6 +32,7 @@
     "eslint": "^9.39.1",
     "eslint-config-next": "^15.5.18",
     "tailwindcss": "^4.1.17",
+    "tsx": "^4.22.3",
     "typescript": "^5.9.3"
   },
   "engines": {

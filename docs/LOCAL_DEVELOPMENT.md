@@ -84,6 +84,12 @@ npm run test:e2e
 
 `npm run test:e2e` starts the dev server on `http://127.0.0.1:3000` through Playwright. Set `PLAYWRIGHT_PORT=3100` if port 3000 is busy. The current smoke tests cover the homepage and unsigned generator setup; they do not create a GitHub repo.
 
+If Playwright reports that Chromium is missing, install the local browser once:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
 ## Common Issues
 
 ### GitHub Sign-In Fails

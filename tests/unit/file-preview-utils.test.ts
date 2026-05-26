@@ -1,31 +1,13 @@
 import assert from "node:assert/strict";
-import { registerHooks } from "node:module";
 import test from "node:test";
 
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context);
-    } catch (error) {
-      if (isModuleResolutionError(error) && shouldTryTypeScriptFile(specifier)) {
-        return nextResolve(`${specifier}.ts`, context);
-      }
-
-      throw error;
-    }
-  },
-});
-
-const filePreviewModule = (await import(
-  new URL("../../src/lib/file-preview/utils.ts", import.meta.url).href
-)) as typeof import("../../src/lib/file-preview/utils");
-const {
+import {
   filterPreviewFiles,
   getKeyFiles,
   getPreviewFileType,
   getPreviewStats,
   groupFilesByType,
-} = filePreviewModule;
+} from "../../src/lib/file-preview/utils";
 
 type PreviewFileType = import("../../src/lib/file-preview/utils").PreviewFileType;
 type PreviewGeneratedFile =
@@ -98,17 +80,3 @@ test("reports stats and key files without reordering ordinary files", () => {
     ],
   );
 });
-
-function isModuleResolutionError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error.code === "ERR_MODULE_NOT_FOUND" ||
-      error.code === "ERR_UNSUPPORTED_DIR_IMPORT")
-  );
-}
-
-function shouldTryTypeScriptFile(specifier: string) {
-  return specifier.startsWith(".") && !specifier.endsWith(".ts");
-}

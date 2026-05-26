@@ -4,12 +4,12 @@ The validator lives at `scripts/validate-stack-templates.ts`. It imports the cur
 
 ## npm script
 
-The validator runs directly on Node 24, so it does not need a separate TypeScript script runner.
+The npm script runs the TypeScript validator through `tsx`, so local development and CI can use the Node 20 runtime declared by the project.
 
 ```json
 {
   "scripts": {
-    "validate:stacks": "node scripts/validate-stack-templates.ts"
+    "validate:stacks": "tsx scripts/validate-stack-templates.ts"
   }
 }
 ```

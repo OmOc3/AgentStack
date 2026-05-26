@@ -1,41 +1,19 @@
 import assert from "node:assert/strict";
-import { registerHooks } from "node:module";
 import test from "node:test";
 
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context);
-    } catch (error) {
-      if (isModuleNotFoundError(error) && shouldTryTypeScriptFile(specifier)) {
-        return nextResolve(`${specifier}.ts`, context);
-      }
-
-      throw error;
-    }
-  },
-});
-
-const previewSessionModule = (await import(
-  new URL("../../src/lib/preview-session/index.ts", import.meta.url).href
-)) as typeof import("../../src/lib/preview-session");
-const generatedFileMetadataModule = (await import(
-  new URL("../../src/lib/generated-files/metadata.ts", import.meta.url).href
-)) as typeof import("../../src/lib/generated-files/metadata");
-
-const {
+import {
   DEFAULT_PREVIEW_SESSION_TTL_MS,
   PreviewSessionExpiredError,
   PreviewSessionMismatchError,
   PreviewSessionNotFoundError,
   createMemoryPreviewSessionStore,
-} = previewSessionModule;
-const {
+} from "../../src/lib/preview-session";
+import {
   classifyGeneratedFile,
   countGeneratedFileCharacters,
   countGeneratedFiles,
   getGeneratedFileStats,
-} = generatedFileMetadataModule;
+} from "../../src/lib/generated-files/metadata";
 
 test("stores preview sessions with cloned files and a safe default TTL", () => {
   const currentTime = 1_000;
@@ -163,16 +141,3 @@ test("classifies generated files and counts simple metadata", () => {
     totalFiles: 2,
   });
 });
-
-function isModuleNotFoundError(error: unknown) {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    error.code === "ERR_MODULE_NOT_FOUND"
-  );
-}
-
-function shouldTryTypeScriptFile(specifier: string) {
-  return specifier.startsWith(".") && !specifier.endsWith(".ts");
-}

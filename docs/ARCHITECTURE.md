@@ -13,8 +13,6 @@ AgentStack is a Next.js App Router app that creates AI-agent-ready GitHub reposi
 - AI provider abstraction with Gemini `gemini-2.0-flash` as the active adapter
 - Vercel Analytics
 
-The repo also contains Supabase helper modules under `src/utils/supabase`, but no current route imports them.
-
 ## App Routes
 
 | Route | Purpose |

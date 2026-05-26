@@ -36,8 +36,6 @@ openssl rand -base64 32
 | `NEXTAUTH_SECRET` | Production yes, local recommended | `src/lib/auth.ts` | Signs auth state. Development has a fallback, but local parity is better with a real value. |
 | `NEXTAUTH_URL` | Production yes, local recommended | NextAuth runtime | Use the canonical origin, such as `http://localhost:3000` or the production domain. |
 | `REPO_COUNT_OFFSET` | No | `src/app/api/stats/route.ts` | Optional number displayed as the generated repo count. Defaults to `0`. |
-| `NEXT_PUBLIC_SUPABASE_URL` | No | `src/utils/supabase/*` | Only needed if the Supabase helpers are imported into active routes or components. Public value. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | No | `src/utils/supabase/*` | Only needed with the Supabase helpers. Public value. |
 | `CI` | No | `playwright.config.ts` | Enables CI behavior for Playwright retries and `forbidOnly`. Usually set by CI. |
 | `PLAYWRIGHT_TEST` | No | `playwright.config.ts` | Set by the Playwright web server config; do not set manually for normal local work. |
 

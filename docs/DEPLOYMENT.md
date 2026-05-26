@@ -28,8 +28,6 @@ Optional:
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `REPO_COUNT_OFFSET` | No | Integer returned by `/api/stats`; defaults to `0`. |
-| `NEXT_PUBLIC_SUPABASE_URL` | No | Only needed if the currently unused Supabase helpers are wired into a route. Public value. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | No | Only needed with the Supabase helpers. Public value. |
 
 Generate `NEXTAUTH_SECRET` with:
 
@@ -71,6 +69,8 @@ Run these before promoting a change that touches source code:
 ```bash
 npm run lint
 npm run typecheck
+npm run test:unit
+npm run validate:stacks
 npm run build
 ```
 

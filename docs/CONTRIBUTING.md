@@ -44,6 +44,12 @@ npm run test:e2e
 
 The current e2e suite is a smoke test. It does not call Gemini or create a GitHub repo.
 
+If Chromium is not installed locally, run:
+
+```bash
+npx playwright install --with-deps chromium
+```
+
 ## Pull Request Notes
 
 Include:
