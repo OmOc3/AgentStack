@@ -2,9 +2,14 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
+import { storeGeneratedFiles } from "@/lib/file-store";
 import { generateAgentFiles } from "@/lib/gemini";
 import { createRepositoryWithFiles, getHttpStatus } from "@/lib/github";
-import { REPO_GENERATED_COOKIE } from "@/lib/rate-limit";
+import {
+  checkIpRateLimit,
+  getClientIp,
+  REPO_GENERATED_COOKIE,
+} from "@/lib/rate-limit";
 import {
   getStackDefinition,
   getStaticFiles,
@@ -30,6 +35,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const ip = getClientIp(request);
+  const ipRateLimit = checkIpRateLimit(ip);
+
+  if (!ipRateLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: `Too many repos generated from this IP. Try again in ${ipRateLimit.retryAfter} minutes.`,
+      },
+      { status: 429 },
+    );
+  }
+
   const cookieStore = await cookies();
 
   if (cookieStore.get(REPO_GENERATED_COOKIE)) {
@@ -39,10 +56,10 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: GenerateRequestBody;
+  let requestBody: unknown;
 
   try {
-    body = (await request.json()) as GenerateRequestBody;
+    requestBody = await request.json();
   } catch {
     return NextResponse.json(
       { error: "Send a valid JSON request body." },
@@ -50,6 +67,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const body: GenerateRequestBody = isGenerateRequestBody(requestBody)
+    ? requestBody
+    : {};
   const projectName =
     typeof body.projectName === "string" ? body.projectName.trim() : "";
   const projectNameError = validateProjectName(projectName);
@@ -98,8 +118,9 @@ export async function POST(request: Request) {
       projectName,
       token: session.accessToken,
     });
+    const previewId = storeGeneratedFiles(files);
 
-    const response = NextResponse.json({ repoUrl });
+    const response = NextResponse.json({ previewId, repoUrl });
 
     response.cookies.set(REPO_GENERATED_COOKIE, "1", {
       httpOnly: true,
@@ -136,4 +157,8 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+function isGenerateRequestBody(value: unknown): value is GenerateRequestBody {
+  return typeof value === "object" && value !== null;
 }

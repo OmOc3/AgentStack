@@ -4,6 +4,11 @@ export const stackIds = [
   "next-firebase",
   "next-drizzle",
   "expo-firebase",
+  "t3-stack",
+  "next-prisma",
+  "sveltekit-tailwind",
+  "remix-tailwind",
+  "astro-tailwind",
 ] as const;
 
 export type StackId = (typeof stackIds)[number];
@@ -56,6 +61,36 @@ export const stackDefinitions: StackDefinition[] = [
     name: "Expo + Firebase",
     description: "An Expo Router starter using Firebase on SDK 55.",
     icon: "expo",
+  },
+  {
+    id: "t3-stack",
+    name: "T3 Stack",
+    description: "Next.js + tRPC + Prisma + NextAuth + Tailwind",
+    icon: "next",
+  },
+  {
+    id: "next-prisma",
+    name: "Next.js + Prisma + PostgreSQL",
+    description: "Next.js App Router with Prisma ORM and PostgreSQL",
+    icon: "next",
+  },
+  {
+    id: "sveltekit-tailwind",
+    name: "SvelteKit + Tailwind",
+    description: "SvelteKit with TypeScript and Tailwind CSS",
+    icon: "next",
+  },
+  {
+    id: "remix-tailwind",
+    name: "Remix + Tailwind",
+    description: "Remix with TypeScript and Tailwind CSS",
+    icon: "next",
+  },
+  {
+    id: "astro-tailwind",
+    name: "Astro + Tailwind",
+    description: "Astro with Tailwind CSS integration",
+    icon: "next",
   },
 ];
 
@@ -178,6 +213,11 @@ const stackFileBuilders: Record<StackId, (projectName: string) => GeneratedFile[
       },
     ],
     "expo-firebase": (projectName) => expoFirebaseFiles(projectName),
+    "t3-stack": (projectName) => t3StackFiles(projectName),
+    "next-prisma": (projectName) => nextPrismaFiles(projectName),
+    "sveltekit-tailwind": (projectName) => svelteKitTailwindFiles(projectName),
+    "remix-tailwind": (projectName) => remixTailwindFiles(projectName),
+    "astro-tailwind": (projectName) => astroTailwindFiles(projectName),
   };
 
 function readmeTemplate(projectName: string, stackName: string) {
@@ -207,7 +247,7 @@ npm run dev
 
 ## Agent Notes
 
-- Read CLAUDE.md and AGENT.md before changing code.
+- Read CLAUDE.md, AGENT.md, .cursorrules, and .windsurfrules before changing code.
 - Keep changes small and easy to review.
 - Run the listed checks before handing work back.
 `;
@@ -263,6 +303,33 @@ EXPO_PUBLIC_FIREBASE_PROJECT_ID=
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
+`;
+  }
+
+  if (stackId === "t3-stack") {
+    return `DATABASE_URL=
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=
+`;
+  }
+
+  if (stackId === "next-prisma") {
+    return `DATABASE_URL=
+`;
+  }
+
+  if (stackId === "sveltekit-tailwind") {
+    return `PUBLIC_APP_URL=http://localhost:5173
+`;
+  }
+
+  if (stackId === "remix-tailwind") {
+    return `APP_URL=http://localhost:3000
+`;
+  }
+
+  if (stackId === "astro-tailwind") {
+    return `PUBLIC_APP_URL=http://localhost:4321
 `;
   }
 
@@ -384,7 +451,7 @@ function nextPageTemplate(projectName: string) {
   return `const checklist = [
   "Update the product direction in README.md.",
   "Add environment values from .env.example.",
-  "Read CLAUDE.md and AGENT.md before the first agent run.",
+  "Read CLAUDE.md, AGENT.md, .cursorrules, and .windsurfrules before the first agent run.",
 ];
 
 export default function Home() {
@@ -864,6 +931,681 @@ function expoTsconfigTemplate() {
         },
       },
       include: ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+    },
+    null,
+    2,
+  );
+}
+
+function t3StackFiles(projectName: string): GeneratedFile[] {
+  return [
+    ...nextTailwindFiles(projectName, {
+      dependencies: {
+        "@auth/prisma-adapter": "^2.11.1",
+        "@prisma/client": "^6.19.0",
+        "@trpc/client": "^11.7.2",
+        "@trpc/next": "^11.7.2",
+        "@trpc/server": "^11.7.2",
+        "next-auth": "^5.0.0-beta.31",
+      },
+      devDependencies: {
+        prisma: "^6.19.0",
+      },
+      scripts: {
+        "db:generate": "prisma generate",
+        "db:push": "prisma db push",
+        "db:studio": "prisma studio",
+      },
+    }),
+    {
+      path: "src/server/trpc.ts",
+      content: t3TrpcTemplate(),
+    },
+    {
+      path: "src/server/routers/_app.ts",
+      content: t3AppRouterTemplate(),
+    },
+    {
+      path: "prisma/schema.prisma",
+      content: t3PrismaSchemaTemplate(),
+    },
+    {
+      path: "src/lib/auth.ts",
+      content: t3AuthTemplate(),
+    },
+  ];
+}
+
+function t3TrpcTemplate() {
+  return `import { initTRPC } from "@trpc/server";
+
+export function createTRPCContext() {
+  return {};
+}
+
+const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create();
+
+export const createTRPCRouter = t.router;
+export const publicProcedure = t.procedure;
+`;
+}
+
+function t3AppRouterTemplate() {
+  return `import { createTRPCRouter } from "@/server/trpc";
+
+export const appRouter = createTRPCRouter({});
+
+export type AppRouter = typeof appRouter;
+`;
+}
+
+function t3PrismaSchemaTemplate() {
+  return `generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  sessions      Session[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+`;
+}
+
+function t3AuthTemplate() {
+  return `import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
+import NextAuth from "next-auth";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [],
+});
+`;
+}
+
+function nextPrismaFiles(projectName: string): GeneratedFile[] {
+  return [
+    ...nextTailwindFiles(projectName, {
+      dependencies: {
+        "@prisma/client": "^6.19.0",
+      },
+      devDependencies: {
+        prisma: "^6.19.0",
+      },
+      scripts: {
+        "db:generate": "prisma generate",
+        "db:push": "prisma db push",
+        "db:studio": "prisma studio",
+      },
+    }),
+    {
+      path: "prisma/schema.prisma",
+      content: nextPrismaSchemaTemplate(),
+    },
+    {
+      path: "src/lib/prisma.ts",
+      content: prismaClientTemplate(),
+    },
+  ];
+}
+
+function nextPrismaSchemaTemplate() {
+  return `generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+`;
+}
+
+function prismaClientTemplate() {
+  return `import { PrismaClient } from "@prisma/client";
+
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+`;
+}
+
+function svelteKitTailwindFiles(projectName: string): GeneratedFile[] {
+  return [
+    {
+      path: "svelte.config.js",
+      content: svelteConfigTemplate(),
+    },
+    {
+      path: "vite.config.ts",
+      content: svelteViteConfigTemplate(),
+    },
+    {
+      path: "tailwind.config.ts",
+      content: svelteTailwindConfigTemplate(),
+    },
+    {
+      path: "src/routes/+page.svelte",
+      content: sveltePageTemplate(projectName),
+    },
+    {
+      path: "src/routes/+layout.svelte",
+      content: svelteLayoutTemplate(),
+    },
+    {
+      path: "src/app.css",
+      content: svelteAppCssTemplate(),
+    },
+    {
+      path: "package.json",
+      content: sveltePackageJsonTemplate(projectName),
+    },
+  ];
+}
+
+function svelteConfigTemplate() {
+  return `import adapter from "@sveltejs/adapter-auto";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+
+const config = {
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter(),
+  },
+};
+
+export default config;
+`;
+}
+
+function svelteViteConfigTemplate() {
+  return `import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [sveltekit()],
+});
+`;
+}
+
+function svelteTailwindConfigTemplate() {
+  return `import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: ["./src/**/*.{html,js,svelte,ts}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+`;
+}
+
+function sveltePageTemplate(projectName: string) {
+  return `<script lang="ts">
+  const checklist = [
+    "Set the product notes in README.md.",
+    "Add any public values to .env.",
+    "Keep agent-facing instructions short and current.",
+  ];
+</script>
+
+<svelte:head>
+  <title>${projectName}</title>
+</svelte:head>
+
+<main class="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+  <section class="mx-auto flex max-w-3xl flex-col gap-8">
+    <div class="space-y-4">
+      <p class="text-sm font-medium uppercase tracking-[0.2em] text-purple-300">
+        Agent-ready starter
+      </p>
+      <h1 class="text-4xl font-semibold tracking-tight sm:text-6xl">
+        ${projectName}
+      </h1>
+      <p class="max-w-2xl text-lg leading-8 text-zinc-300">
+        SvelteKit, TypeScript, and Tailwind are wired up so you can start with
+        the first real screen.
+      </p>
+    </div>
+
+    <div class="rounded-lg border border-zinc-800 bg-zinc-900/70 p-6">
+      <h2 class="text-lg font-medium">Before you build</h2>
+      <ul class="mt-4 space-y-3 text-sm text-zinc-300">
+        {#each checklist as item}
+          <li class="flex gap-3">
+            <span class="mt-1 h-2 w-2 rounded-full bg-purple-400"></span>
+            <span>{item}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  </section>
+</main>
+`;
+}
+
+function svelteLayoutTemplate() {
+  return `<script lang="ts">
+  import "../app.css";
+</script>
+
+<slot />
+`;
+}
+
+function svelteAppCssTemplate() {
+  return `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: rgb(9 9 11);
+  color: rgb(244 244 245);
+}
+`;
+}
+
+function sveltePackageJsonTemplate(projectName: string) {
+  return JSON.stringify(
+    {
+      name: projectName,
+      version: "0.1.0",
+      private: true,
+      type: "module",
+      scripts: {
+        dev: "vite dev",
+        build: "vite build",
+        preview: "vite preview",
+      },
+      devDependencies: {
+        "@sveltejs/adapter-auto": "^6.1.0",
+        "@sveltejs/kit": "^2.48.6",
+        "@sveltejs/vite-plugin-svelte": "^6.2.1",
+        autoprefixer: "^10.4.22",
+        postcss: "^8.5.6",
+        svelte: "^5.43.14",
+        tailwindcss: "^3.4.18",
+        typescript: "^5.9.3",
+        vite: "^7.2.4",
+      },
+    },
+    null,
+    2,
+  );
+}
+
+function remixTailwindFiles(projectName: string): GeneratedFile[] {
+  return [
+    {
+      path: "remix.config.js",
+      content: remixConfigTemplate(),
+    },
+    {
+      path: "tailwind.config.ts",
+      content: remixTailwindConfigTemplate(),
+    },
+    {
+      path: "app/root.tsx",
+      content: remixRootTemplate(),
+    },
+    {
+      path: "app/routes/_index.tsx",
+      content: remixIndexTemplate(projectName),
+    },
+    {
+      path: "app/tailwind.css",
+      content: remixTailwindCssTemplate(),
+    },
+    {
+      path: "package.json",
+      content: remixPackageJsonTemplate(projectName),
+    },
+  ];
+}
+
+function remixConfigTemplate() {
+  return `/** @type {import("@remix-run/dev").AppConfig} */
+export default {
+  ignoredRouteFiles: ["**/.*"],
+};
+`;
+}
+
+function remixTailwindConfigTemplate() {
+  return `import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: ["./app/**/*.{js,jsx,ts,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+`;
+}
+
+function remixRootTemplate() {
+  return `import type { LinksFunction } from "@remix-run/node";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+import type { ReactNode } from "react";
+import stylesheet from "./tailwind.css";
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: stylesheet },
+];
+
+export function Layout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export default function App() {
+  return <Outlet />;
+}
+`;
+}
+
+function remixIndexTemplate(projectName: string) {
+  return `const checklist = [
+  "Write the product notes in README.md.",
+  "Add server-only values to .env.",
+  "Keep the first route focused on the main workflow.",
+];
+
+export default function Index() {
+  return (
+    <main className="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+      <section className="mx-auto flex max-w-3xl flex-col gap-8">
+        <div className="space-y-4">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-purple-300">
+            Agent-ready starter
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight sm:text-6xl">
+            ${projectName}
+          </h1>
+          <p className="max-w-2xl text-lg leading-8 text-zinc-300">
+            Remix, TypeScript, and Tailwind are ready. Start by shaping the
+            route around the product task.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-6">
+          <h2 className="text-lg font-medium">Before you build</h2>
+          <ul className="mt-4 space-y-3 text-sm text-zinc-300">
+            {checklist.map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-1 h-2 w-2 rounded-full bg-purple-400" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </main>
+  );
+}
+`;
+}
+
+function remixTailwindCssTemplate() {
+  return `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: rgb(9 9 11);
+  color: rgb(244 244 245);
+}
+`;
+}
+
+function remixPackageJsonTemplate(projectName: string) {
+  return JSON.stringify(
+    {
+      name: projectName,
+      version: "0.1.0",
+      private: true,
+      type: "module",
+      scripts: {
+        dev: "remix dev",
+        build: "remix build",
+        start: "remix-serve ./build/server/index.js",
+      },
+      dependencies: {
+        "@remix-run/node": "^2.17.0",
+        "@remix-run/react": "^2.17.0",
+        "@remix-run/serve": "^2.17.0",
+        isbot: "^5.1.31",
+        react: "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
+      devDependencies: {
+        "@remix-run/dev": "^2.17.0",
+        "@types/react": "^19.2.6",
+        "@types/react-dom": "^19.2.3",
+        autoprefixer: "^10.4.22",
+        postcss: "^8.5.6",
+        tailwindcss: "^3.4.18",
+        typescript: "^5.9.3",
+      },
+    },
+    null,
+    2,
+  );
+}
+
+function astroTailwindFiles(projectName: string): GeneratedFile[] {
+  return [
+    {
+      path: "astro.config.mjs",
+      content: astroConfigTemplate(),
+    },
+    {
+      path: "tailwind.config.ts",
+      content: astroTailwindConfigTemplate(),
+    },
+    {
+      path: "src/pages/index.astro",
+      content: astroIndexTemplate(projectName),
+    },
+    {
+      path: "src/layouts/Layout.astro",
+      content: astroLayoutTemplate(projectName),
+    },
+    {
+      path: "package.json",
+      content: astroPackageJsonTemplate(projectName),
+    },
+  ];
+}
+
+function astroConfigTemplate() {
+  return `import tailwind from "@astrojs/tailwind";
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  integrations: [tailwind()],
+});
+`;
+}
+
+function astroTailwindConfigTemplate() {
+  return `import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+`;
+}
+
+function astroIndexTemplate(projectName: string) {
+  return `---
+import Layout from "../layouts/Layout.astro";
+
+const checklist = [
+  "Update README.md with the product brief.",
+  "Add public environment values to .env.",
+  "Keep the first page focused on real content.",
+];
+---
+
+<Layout title="${projectName}">
+  <main class="min-h-screen bg-zinc-950 px-6 py-16 text-zinc-100">
+    <section class="mx-auto flex max-w-3xl flex-col gap-8">
+      <div class="space-y-4">
+        <p class="text-sm font-medium uppercase tracking-[0.2em] text-purple-300">
+          Agent-ready starter
+        </p>
+        <h1 class="text-4xl font-semibold tracking-tight sm:text-6xl">
+          ${projectName}
+        </h1>
+        <p class="max-w-2xl text-lg leading-8 text-zinc-300">
+          Astro and Tailwind are ready. Replace this page with content that
+          matches the project brief.
+        </p>
+      </div>
+
+      <div class="rounded-lg border border-zinc-800 bg-zinc-900/70 p-6">
+        <h2 class="text-lg font-medium">Before you build</h2>
+        <ul class="mt-4 space-y-3 text-sm text-zinc-300">
+          {
+            checklist.map((item) => (
+              <li class="flex gap-3">
+                <span class="mt-1 h-2 w-2 rounded-full bg-purple-400" />
+                <span>{item}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+  </main>
+</Layout>
+`;
+}
+
+function astroLayoutTemplate(projectName: string) {
+  return `---
+type Props = {
+  title?: string;
+};
+
+const { title = "${projectName}" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Generated by AgentStack." />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+`;
+}
+
+function astroPackageJsonTemplate(projectName: string) {
+  return JSON.stringify(
+    {
+      name: projectName,
+      version: "0.1.0",
+      private: true,
+      type: "module",
+      scripts: {
+        dev: "astro dev",
+        build: "astro build",
+        preview: "astro preview",
+      },
+      dependencies: {
+        "@astrojs/tailwind": "^6.0.2",
+        astro: "^5.15.4",
+        tailwindcss: "^3.4.18",
+      },
     },
     null,
     2,

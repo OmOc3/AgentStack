@@ -6,14 +6,18 @@ const authSecret =
   (process.env.NODE_ENV === "development"
     ? "agentstack-local-development-secret"
     : undefined);
+const githubClientId = process.env.GITHUB_CLIENT_ID;
+const githubClientSecret = process.env.GITHUB_CLIENT_SECRET;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  secret: authSecret,
+  ...(authSecret !== undefined ? { secret: authSecret } : {}),
   providers: [
     GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      ...(githubClientId !== undefined ? { clientId: githubClientId } : {}),
+      ...(githubClientSecret !== undefined
+        ? { clientSecret: githubClientSecret }
+        : {}),
       authorization: {
         params: {
           scope: "read:user user:email repo",
